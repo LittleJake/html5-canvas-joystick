@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas test</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1, minimum-scale=1, user-scalable=no">
+</head>
+<body>
+<canvas id="left-joystick" width="300" height="300" style="position: absolute; left: 0"></canvas>
+<canvas id="right-joystick" width="300" height="300" style="position: absolute; right: 0"></canvas>
+
+<script>
+    let left_elem = document.getElementById("left-joystick");
+    let left = {
+        element: left_elem,
+        context: left_elem.getContext('2d'),
+        mousedown: false,
+        touchdown: false
+    };
+
+    let right_elem = document.getElementById("right-joystick");
+    let right = {
+        element: right_elem,
+        context: right_elem.getContext('2d'),
+        mousedown: false,
+        touchdown: false,
+    };
+
+    let circle_r = 40;
+
+    function init(e) {
+        drag(e, 150, 150);
+    }
+
+    function drag(e, x, y) {
+        clear(e);
+        e.context.beginPath();
+        e.context.arc(150, 150, 150, 0, Math.PI * 2, true);
+        e.context.stroke();
+
+        e.context.beginPath();
+        e.context.moveTo(x + circle_r, y);
+        e.context.arc(x, y, circle_r, 0, Math.PI * 2, true);
+        e.context.fillStyle = "#848484";
+        e.context.fill();
+        e.context.stroke();
+    }
+    
+    function clear(e) {
+        e.element.width = e.element.width;
+        e.element.height = e.element.height;
+    }
+
+    function l_mouse_down_event(e) {
+        left.mousedown = true;
+        console.log(e.offsetX, e.offsetY);
+    }
+
+    function l_mouse_move_event(e) {
+        if (left.mousedown) {
+            console.log(e.offsetX, e.offsetY);
+            drag(left, e.offsetX, e.offsetY);
+        }
+    }
+
+    function l_mouse_up_event() {
+        left.mousedown = false;
+        init(left);
+    }
+
+    function r_mouse_down_event(e) {
+        right.mousedown = true;
+        console.log(e.offsetX, e.offsetY);
+    }
+
+    function r_mouse_move_event(e) {
+        if (right.mousedown) {
+            console.log(e.offsetX, e.offsetY);
+            drag(right, e.offsetX, e.offsetY);
+        }
+    }
+
+    function r_mouse_up_event() {
+        right.mousedown = false;
+        init(right);
+    }
+
+    function l_touch_start_event(e) {
+        for(var i = 0; i < e.touches.length; i++){
+            if (e.touches[i].target == left.element){
+                left.touchdown = true;
+                console.log(e);
+                console.log(e.touches[i].clientX, e.touches[i].clientY);
+            }
+        }
+    }
+
+    function l_touch_move_event(e) {
+        if (left.touchdown) {
+            for(var i = 0; i < e.touches.length; i++){
+                if (e.touches[i].target == left.element){
+                    var x = e.touches[i].clientX - left.element.offsetLeft;
+                    var y = e.touches[i].clientY - left.element.offsetTop;
+                    console.log(x, y);
+                    drag(left, x, y);
+                }
+            }
+        }
+    }
+
+    function l_touch_end_event() {
+        left.touchdown = false;
+        init(left);
+    }
+
+    function r_touch_start_event(e) {
+        for(var i = 0; i < e.touches.length; i++){
+            if (e.touches[i].target == right.element){
+                right.touchdown = true;
+                console.log(e);
+                console.log(e.touches[i].clientX, e.touches[i].clientY);
+            }
+        }
+    }
+
+    function r_touch_move_event(e) {
+        if (right.touchdown) {
+            for(var i = 0; i < e.touches.length; i++){
+                if (e.touches[i].target == right.element){
+                    var x = e.touches[i].clientX - right.element.offsetLeft;
+                    var y = e.touches[i].clientY - right.element.offsetTop;
+                    console.log(x, y);
+                    drag(right, x, y);
+                }
+            }
+        }
+    }
+
+    function r_touch_end_event() {
+        right.touchdown = false;
+        init(right);
+    }
+    init(left);
+    init(right);
+
+    //bind key
+    //mouse
+    left.element.onmousedown = l_mouse_down_event;
+    left.element.onmousemove = l_mouse_move_event;
+    left.element.onmouseup = l_mouse_up_event;
+    left.element.onmouseleave = l_mouse_up_event;
+    right.element.onmousedown = r_mouse_down_event;
+    right.element.onmousemove = r_mouse_move_event;
+    right.element.onmouseup = r_mouse_up_event;
+    right.element.onmouseleave = r_mouse_up_event;
+
+    //touch
+    left.element.ontouchstart = l_touch_start_event;
+    left.element.ontouchend = l_touch_end_event;
+    left.element.ontouchmove = l_touch_move_event;
+    right.element.ontouchstart = r_touch_start_event;
+    right.element.ontouchend = r_touch_end_event;
+    right.element.ontouchmove = r_touch_move_event;
+
+    //prevent scale
+    window.addEventListener(
+        "touchmove",function(event) {
+            if(event.scale !== 1) {
+                event.preventDefault();
+            }
+        },{
+            passive: false
+        }
+    );
+</script>
+</body>
+</html>
