@@ -10,8 +10,11 @@
 <canvas id="right-joystick" width="300" height="300" style="position: absolute; right: 0"></canvas>
 
 <script>
+    var ws = null;
+    let offset = 150, inner_circle_r = 40, outer_circle_r = 150;
     let left_elem = document.getElementById("left-joystick");
     let left = {
+        type: 'left',
         element: left_elem,
         context: left_elem.getContext('2d'),
         mousedown: false,
@@ -20,30 +23,41 @@
 
     let right_elem = document.getElementById("right-joystick");
     let right = {
+        type: 'right',
         element: right_elem,
         context: right_elem.getContext('2d'),
         mousedown: false,
         touchdown: false,
     };
 
-    let circle_r = 40;
-
     function init(e) {
-        drag(e, 150, 150);
+        drag(e, offset, offset);
     }
 
     function drag(e, x, y) {
         clear(e);
         e.context.beginPath();
-        e.context.arc(150, 150, 150, 0, Math.PI * 2, true);
+        e.context.arc(offset, offset, outer_circle_r, 0, Math.PI * 2, true);
         e.context.stroke();
 
         e.context.beginPath();
-        e.context.moveTo(x + circle_r, y);
-        e.context.arc(x, y, circle_r, 0, Math.PI * 2, true);
+        e.context.moveTo(x + inner_circle_r, y);
+        e.context.arc(x, y, inner_circle_r, 0, Math.PI * 2, true);
         e.context.fillStyle = "#848484";
         e.context.fill();
         e.context.stroke();
+
+        if(ws.readyState === ws.OPEN) {
+            var data = JSON.stringify({
+                type: "move",
+                data: {
+                    position: e.type,
+                    x: x - offset,
+                    y: y - offset
+                },
+            })
+            ws.send(data);
+        }
     }
     
     function clear(e) {
@@ -140,6 +154,23 @@
         right.touchdown = false;
         init(right);
     }
+
+    function start_client() {
+        ws = new WebSocket('ws://192.168.100.197:5678');
+        ws.onopen = function () {
+            ws.send('the request from client');
+        };
+
+        ws.onmessage = function (e) {
+            console.log('from server: ' + e.data);
+        };
+
+        ws.onerror = function (e) {
+            ws.close();
+            start_client()
+        }
+    }
+    start_client();
     init(left);
     init(right);
 
